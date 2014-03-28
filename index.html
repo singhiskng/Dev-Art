@@ -1,0 +1,175 @@
+<!doctype html>
+
+<style>
+
+	#canvas{
+		position: absolute;
+		top:0;
+		left:0;
+		background-color: #333;
+		cursor: crosshair;
+	}
+
+</style>
+
+<canvas id='canvas'></canvas>
+
+<script>
+
+	var canvas = document.getElementById('canvas');
+	var cxt = canvas.getContext('2d');
+
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+
+	cxt.strokeStyle = '#FFF';
+	cxt.lineWidth = 2;
+	cxt.lineJoin = 'round';
+	cxt.lineCap = 'round';
+	cxt.shadowBlur = 5;
+	cxt.shadowColor = '#fff'
+
+	var dragging = false;
+	var eraseing = false;
+	var points = [];
+	var polylines = [];
+
+	window.requestAnimFrame =
+	  	window.requestAnimationFrame ||
+	  	window.webkitRequestAnimationFrame ||
+	  	window.mozRequestAnimationFrame ||
+	  	window.oRequestAnimationFrame ||
+	  	window.msRequestAnimationFrame ||
+	  	function(callback) {
+	    	return window.setTimeout(callback, 1000 / 60);
+		};
+
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+	//	                             EVENTS                               //
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+
+	canvas.addEventListener('mousedown',function(){dragging = true;},false);
+	canvas.addEventListener('mouseup',function(){
+		dragging = false;
+		var line = new polyline(points);
+		polylines.push(line);
+		points=[];
+	},false);
+	canvas.addEventListener('mousemove',mouse,false);
+
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	//              TOUCH SCREEN
+
+	canvas.addEventListener('touchstart',function(){dragging = true;},false);
+	canvas.addEventListener('touchend',function(){
+		dragging = false;
+		var line = new polyline(points);
+		polylines.push(line);
+		points=[];
+	},false);
+	canvas.addEventListener('touchmove',touch,false);
+
+	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
+
+	function mouse(e){
+		moving = true;
+		if(dragging){
+			var x = e.clientX;
+			var y = e.clientY;
+			var p = new point(x,y);
+			points.push(p);
+		}
+	}
+
+	function touch(e){
+
+		if(dragging){
+			var x = e.touches[0].clientX;
+			var y = e.touches[0].clientY;
+			var p = new point(x,y);
+			points.push(p);
+		}
+	}
+
+	function point(x, y){
+		this.x = x;
+		this.y = y;
+	}
+
+	function polyline(p){
+		this.line = p;
+		this.drawing = false;
+		this.d = 0;
+		this.e = 0;
+
+	}
+
+
+	polyline.prototype.draw = function() {
+		d = this.d;
+		p = this.line;
+
+		if(d < p.length-1){
+			for (var j =0; j <d; j++) {
+				draw(p[j],p[j+1]);
+			};
+			this.d++;
+		}
+		else{
+			this.drawing = false;
+			this.d=0;
+		}
+	};
+
+	polyline.prototype.erase = function() {
+		p = this.line;
+		e = this.e;
+
+		if(e<p.length-1){
+			for (var j = p.length-1; j >e; j--) {
+				draw(p[j],p[j-1])
+			};
+			this.e++;
+		}
+		else{
+			this.drawing = true;
+			this.e = 0;
+		}
+	};
+
+	function update(){
+
+		for (var i = 0; i < polylines.length; i++) {
+			var pl = polylines[i]
+			if(pl.drawing){
+				pl.draw();
+			}
+			else{
+				pl.erase();
+			}
+		};
+	};
+
+	function draw(p1, p2){
+		//cxt.save();
+		cxt.beginPath();
+		cxt.moveTo(p1.x,p1.y);
+		cxt.lineTo(p2.x,p2.y);
+		cxt.stroke();
+		//cxt.restore();
+	};
+
+	function animate(){
+		cxt.clearRect(0,0,canvas.width,canvas.height);
+		if(dragging){
+			for (var j =0; j <points.length-1; j++) {
+				draw(points[j],points[j+1])
+			};
+		}
+
+		update();
+		requestAnimFrame(animate);
+	}
+
+	requestAnimFrame(animate);
+</script>
