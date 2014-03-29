@@ -72,6 +72,7 @@
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
 	function mouse(e){
+		e.preventDefault();
 		moving = true;
 		if(dragging){
 			var x = e.clientX;
@@ -82,7 +83,7 @@
 	}
 
 	function touch(e){
-
+		e.preventDefault();
 		if(dragging){
 			var x = e.touches[0].clientX;
 			var y = e.touches[0].clientY;
