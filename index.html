@@ -30,9 +30,15 @@
 	cxt.shadowColor = '#fff'
 
 	var dragging = false;
+	var moving = false;
 	var eraseing = false;
 	var points = [];
 	var polylines = [];
+
+	var mouse={
+		x:0,
+		y:0
+	}
 
 	window.requestAnimFrame =
 	  	window.requestAnimationFrame ||
@@ -55,7 +61,7 @@
 		polylines.push(line);
 		points=[];
 	},false);
-	canvas.addEventListener('mousemove',mouse,false);
+	canvas.addEventListener('mousemove',move,false);
 
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	//              TOUCH SCREEN
@@ -71,25 +77,19 @@
 
 	//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 
-	function mouse(e){
-		e.preventDefault();
+	function move(e){
 		moving = true;
-		if(dragging){
-			var x = e.clientX;
-			var y = e.clientY;
-			var p = new point(x,y);
-			points.push(p);
-		}
+		e.preventDefault();
+		mouse.x = e.clientX;
+		mouse.y = e.clientY;
+
 	}
 
 	function touch(e){
+		moving = true;
 		e.preventDefault();
-		if(dragging){
-			var x = e.touches[0].clientX;
-			var y = e.touches[0].clientY;
-			var p = new point(x,y);
-			points.push(p);
-		}
+		mouse.x = e.touches[0].clientX;
+		mouse.y = e.touches[0].clientY;
 	}
 
 	function point(x, y){
@@ -148,7 +148,15 @@
 		};
 	};
 
+	function getpoint(){
+		if(dragging && moving){
+			var p = new point(mouse.x,mouse.y);
+			points.push(p);
+		}
+	}
+
 	function draw(p1, p2){
+		
 		cxt.save();
 		cxt.beginPath();
 		cxt.moveTo(p1.x,p1.y);
@@ -159,6 +167,7 @@
 	
 	function animate(){
 
+		getpoint();
 		cxt.clearRect(0,0,canvas.width,canvas.height);
 		if(dragging){
 			for (var j =0; j <points.length-1; j++) {
@@ -168,6 +177,7 @@
 
 		update();
 		requestAnimFrame(animate);
+		moving = false;
 	}
 
 	requestAnimFrame(animate);
